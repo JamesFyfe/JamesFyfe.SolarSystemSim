@@ -1,0 +1,172 @@
+<html>
+
+<canvas id="myCanvas" style="border:1px solid #000000;" width="1500"; height="800";></canvas>
+
+<button id="playPause" style="position:absolute; top:70; left:20" onclick="pause()">Pause/Play</button>
+<button id="speedUp" style="position:absolute; top:90; left:20" onclick="fast()">Speed Up</button>
+<button id="slowDown" style="position:absolute; top:110; left:20" onclick="slow()">Slow Down</button>
+
+
+<script>
+
+  var canvas = document.getElementById("myCanvas");
+  var ctx = canvas.getContext("2d");
+  ctx.fillStyle = "black";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    //x, y, speedX, speedY, radius, mass
+    var sun = [640, 340, 0, 0, 2, 333000, "#ffcc00"];
+    var mercury = [640, 336.402, -0.79, 0, 1, 0.055, "#9ea0a3"];
+    var venus = [640, 333.276, -0.58, 0, 1, 0.815, "#ffb121"];
+    var earth = [640, 330.7044, -0.5, 0, 1, 1, "#5b99ff"];
+    var mars = [640, 325.84, -0.4, 0, 1, 0.107, "#ff5c3f"];
+    var jupiter = [640, 291.62, -0.215, 0, 3, 318, "#efd9a2"];
+    var saturn = [640, 250.93, -0.158, 0, 2, 95, "#e0c174"];
+    var uranus = [640, 165.2, -0.113, 0, 2, 14.5, "#b0eef2"];
+    var neptune = [640, 60.7, -0.0897, 0, 2, 17, "#3f8cff"];
+    var pluto = [364.31, 340, 0, 0.1, 1, 0.02, "#ffeae0"];
+
+    var planets = [sun, mercury, venus, earth, mars, jupiter, saturn, uranus, neptune, pluto];
+
+    var G = 0.00000667408;
+    var force, acceleration, accelerationX, accelerationY, time = 0, year = 0, x;
+    var dist, distX, distY;
+    var play = true;
+    var delay = 10;
+    var speed = 1;
+
+
+    x = playSim();
+
+
+    function playSim()
+    {
+      var count = true;
+      x = setInterval(function()
+      {
+        time += speed; 
+        year = time/128.4;
+        for (var i = 0; i < planets.length; i++)
+        {
+         // if (count == true);
+          {
+            draw(i);
+          }
+          gravity(i);
+          movement(i);
+          count = !count;
+        }
+      }, delay);
+      return (x);
+    }
+
+
+    function gravity(i)
+    {
+      acceleration = 0;
+      accelerationY = 0;
+      accelerationX = 0;
+
+      for (var k = 0; k < planets.length; k++)
+      {
+        if (planets[k][5] > 0.5 && k != i)
+        {
+          distX = Math.abs(planets[i][0] - planets[k][0]);
+          distY = Math.abs(planets[i][1] - planets[k][1]);
+          dist = Math.sqrt(distX**2 + distY**2);
+
+          force = (planets[i][5] * planets[k][5]) / (distY**2 + distX**2) * G;
+
+          acceleration = force/planets[i][5];
+
+          if (planets[i][0] > planets[k][0])
+          {
+            accelerationX -= acceleration * (distX / dist);
+          }
+          else
+          {
+            accelerationX += acceleration * (distX / dist);
+          }
+
+          if (planets[i][1] > planets[k][1])
+          {
+            accelerationY -= acceleration * (distY / dist);
+          }
+          else
+          {
+            accelerationY += acceleration * (distY / dist);
+          }
+        }
+      }
+    }
+
+    function movement(i)
+    {
+      planets[i][2] += accelerationX;
+      planets[i][3] += accelerationY;
+ 
+      planets[i][1] += planets[i][3];
+      planets[i][0] += planets[i][2];
+    }
+
+    function draw(i)
+    {
+      var canvas = document.getElementById("myCanvas");
+      var ctx = canvas.getContext("2d");
+      if (i == 0)
+        {
+          ctx.fillStyle = "black";
+          ctx.globalAlpha=0.1;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.font = "30px Arial";
+          ctx.fillStyle = "white";
+          ctx.globalAlpha=1;
+          ctx.fillText('Year ' + Math.floor(year), 20, 30);
+        }
+        ctx.beginPath();
+        ctx.arc(planets[i][0], planets[i][1], planets[i][4], 0, 2 * Math.PI);
+        ctx.fillStyle = planets[i][6];
+        ctx.globalAlpha=1;
+        ctx.fill();
+    }
+
+    function pause()
+    {
+      if (play == true)
+      {
+        clearInterval(x);
+        play = false;
+      }
+      else
+      {
+        x = playSim();
+        play = true;
+      }
+    }
+
+    function slow()
+    {
+    for (var j = 0; j < planets.length; j++)
+      {
+        planets[j][2] /= 1.5;
+        planets[j][3] /= 1.5;
+      }
+        G /= 1.5**2;
+        speed /= 1.5;
+    }
+
+    function fast()
+    {
+    for (var j = 0; j < planets.length; j++)
+      {
+        planets[j][2] *= 1.5;
+        planets[j][3] *= 1.5;
+      }
+        G *= 1.5**2;
+        speed *= 1.5;
+    }
+
+
+
+</script>
+</html>
