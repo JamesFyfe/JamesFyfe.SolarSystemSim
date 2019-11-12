@@ -1,6 +1,6 @@
 <html>
 <!-- 
-place new planets into orbit automatically
+auto orbit, stationary, custom velocity buttons
 change time, zoom controls
 make gravity helper function
 -->
@@ -302,7 +302,6 @@ make gravity helper function
       this.col = col;
     }
 
-    //static 
 
     var canvas = document.getElementById("myCanvas");
     var ctx = canvas.getContext("2d");
@@ -333,7 +332,7 @@ make gravity helper function
 
     var mars = new Planet("Mars", Math.cos(3.1)*249.23*10**9, Math.sin(3.1)*249.23*10**9, -Math.sin(3.1)*21970, Math.cos(3.1)*21970, 3389500, 0.7, 6.4171*10**23, [phobos, deimos], "#ff5c3f");
     var jupiter = new Planet("Jupiter", Math.cos(4.7)*816.62*10**9, Math.sin(4.7)*816.62*10**9, -Math.sin(4.7)*12440, Math.cos(4.7)*12440, 69911000, 3, 1.8982*10**27, [io, europa, ganymede, callisto], "#efd9a2");
-    var saturn = new Planet("Saturn", Math.cos(5.1)*1514.5*10**9, Math.sin(5.1)*1514.5*10**9, -Math.sin(5.1)*9090, Math.cos(5.1)*9090, 58232000, 2.5, 5.6834*10**26, [], "#e0c174");
+    var saturn = new Planet("Saturn", Math.cos(5.1)*1514.5*10**9, Math.sin(5.1)*1514.5*10**9, -Math.sin(5.1)*9090, Math.cos(5.1)*9090, 58232000, 2.5, 5.6834*10**26, [], "#b0a86d");
     var uranus = new Planet("Uranus", Math.cos(0.7)*3003.62*10**9, Math.sin(0.7)*3003.62*10**9, -Math.sin(0.7)*6490, Math.cos(0.7)*6490, 25362000, 2, 8.6810*10**25, [], "#b0eef2");
     var neptune = new Planet("Neptune", Math.cos(6.1)*4545.67*10**9, Math.sin(6.1)*4545.67*10**9, -Math.sin(6.1)*5370, Math.cos(6.1)*5370, 24622000, 2, 1.02413*10**26, [], "#3f8cff");
     var pluto = new Planet("Pluto", Math.cos(5.2)*7375.93*10**9, Math.sin(5.2)*7375.93*10**9, -Math.sin(5.2)*3710, Math.cos(5.2)*3710, 1188300, 0.3, 1.303*10**22, [], "#ffeae0");
@@ -367,13 +366,16 @@ make gravity helper function
     var distSqrd, distX, distY, sunDistSqrd;
     var play = true, trails = false;
     var year=day=hour=minute=second=0, strHour, strMinute, strSecond;
-    var massUnit, massMult, radUnit, radMult;
+    var massUnit, massMult, radUnit, radMult, quickToggleTrails;
     var delay = 17;
-    var speedMult = 10000, speed = 0.017*speedMult;//300; //0.017 real time
+    var speedMult = 1000, speed = 0.017*speedMult;//300; //0.017 real time
     var current, four3PI = 4/3*Math.PI;
-    var focus = 0, zoom = 0.0000000008;
+    var focus = 6, zoom = 0.0000015;
 
-    //satRings();
+    var realSatRings = false;
+    if(realSatRings)
+      satRings();
+
     x = playSim();
 
 
@@ -383,13 +385,17 @@ make gravity helper function
       {
         addTime();
         draw(planets);
-        draw(smallObjects);
+        if(zoom > 0.000000004)
+        {
+          draw(smallObjects);
+        }
         gravity();
         movement(planets);
         movement(smallObjects)
         impact();
         //console.log(planets);
         //console.log(smallObjects);
+
       }, delay);
       return (x);
     }
@@ -533,6 +539,11 @@ make gravity helper function
           ctx.globalAlpha=1;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         document.getElementById("time").innerHTML="x" + Math.round(speed/0.017) + " Year " + Math.floor(year) + " Day " + Math.floor(day) + " " + strHour + ":" + strMinute + ":" + strSecond;
+        if(quickToggleTrails == true)
+        {
+          trails = true;
+          quickToggleTrails = false;
+        }
       }
 
       var drawX, drawY;
@@ -554,16 +565,93 @@ make gravity helper function
           drawY = (arr[i].yPos-planets[focus].yPos)*zoom;
         }
 
-        ctx.beginPath();
-        ctx.globalAlpha=1;
         var drawRad = arr[i].rad*zoom;
         if(drawRad < arr[i].minRad)
           drawRad = arr[i].minRad;
-        ctx.arc(drawX+640, 698-(drawY+349), drawRad, 0, 2*Math.PI);
-        ctx.fillStyle = arr[i].col;
-        ctx.fill();
+
+        if(drawX-drawRad < 640 && drawX+drawRad > -640 && drawY-drawRad < 349 && drawY+drawRad > -349)
+        {
+          if(arr[i]==saturn && realSatRings == false && zoom > 0.000000001)
+          {
+            ctx.strokeStyle = arr[i].col;
+            // drawCircle(drawX+640, 698-(drawY+349), drawRad*1.4, zoom*11900000, 0.1);
+            // drawCircle(drawX+640, 698-(drawY+349), drawRad*1.57, zoom*7700000, 0.3);
+            // drawCircle(drawX+640, 698-(drawY+349), drawRad*1.87, zoom*27300000, 0.4);
+            // drawCircle(drawX+640, 698-(drawY+349), drawRad*2.31, zoom*13500000, 0.2);
+            // drawCircle(drawX+640, 698-(drawY+349), drawRad*2.47, zoom*4000000, 0.2);
+            var opa;
+            for(var j=1.3; j<2.5; j+=1/zoom*0.00000001)
+            {
+              if(j<1.5)
+                opa = 0.2;
+              else if(j<1.64)
+                opa = 0.5;
+              else if(j<2.1)
+                opa = 0.7;
+              else if(j<2.2)
+                opa = 0;
+              else if(j<2.42)
+                opa = 0.3;
+              else if(j<2.45)
+                opa = 0;
+              else
+                opa = 0.3;
+              drawEllipse(drawX+640, 698-(drawY+349), drawRad*j, opa, Math.PI, 2*Math.PI);
+            }
+          }
+          ctx.beginPath();
+          ctx.globalAlpha=1;
+          if(drawRad < 1)
+            ctx.rect(drawX+640-drawRad, 698-(drawY+349)-drawRad, drawRad*2, drawRad*2);
+          else
+            ctx.arc(drawX+640, 698-(drawY+349), drawRad, 0, 2*Math.PI);
+          ctx.fillStyle = arr[i].col;
+          ctx.fill();
+          if(arr[i]==saturn && realSatRings == false && zoom > 0.000000001)
+          {
+            // ctx.strokeStyle = arr[i].col;
+            // drawCircle(drawX+640, 698-(drawY+349), drawRad*1.4, zoom*11900000, 0.1);
+            // drawCircle(drawX+640, 698-(drawY+349), drawRad*1.57, zoom*7700000, 0.3);
+            // drawCircle(drawX+640, 698-(drawY+349), drawRad*1.87, zoom*27300000, 0.4);
+            // drawCircle(drawX+640, 698-(drawY+349), drawRad*2.31, zoom*13500000, 0.2);
+            // drawCircle(drawX+640, 698-(drawY+349), drawRad*2.47, zoom*4000000, 0.2);
+            var opa;
+            for(var j=1.3; j<2.5; j+=1/zoom*0.00000001)
+            {
+              if(j<1.5)
+                opa = 0.2;
+              else if(j<1.64)
+                opa = 0.5;
+              else if(j<2.1)
+                opa = 0.7;
+              else if(j<2.2)
+                opa = 0;
+              else if(j<2.42)
+                opa = 0.3;
+              else if(j<2.45)
+                opa = 0;
+              else
+                opa = 0.3;
+              drawEllipse(drawX+640, 698-(drawY+349), drawRad*j, opa, 0, Math.PI);
+            }
+          }
+        }
       }
     }
+
+    function drawEllipse(x,y,radi,opac,start,end)
+    {
+      ctx.strokeStyle = "#e8e1a9";
+      ctx.lineWidth = 0.6;
+      if(trails)
+        ctx.globalAlpha = opac/10;
+      else
+        ctx.globalAlpha = opac;
+      ctx.beginPath();
+      ctx.ellipse(x, y, radi, radi*0.3, -0.2, start, end);
+      ctx.stroke();
+    }
+
 
     function impact()
     {
@@ -750,6 +838,11 @@ make gravity helper function
     function focusPlanet()
     {
       focus = current;
+      if(trails == true)
+      {
+        trails = false;
+        quickToggleTrails = true;
+      }
     }
 
     function newPlanet()
@@ -782,7 +875,7 @@ make gravity helper function
 
     function satRings()
     {
-      var ringDist, ringAngle=0, ringVel, numRings=2000, sinAngle, cosAngle;
+      var ringDist, ringAngle=0, ringVel, numRings=3000, sinAngle, cosAngle;
       var angleChange = 2*Math.PI/numRings;
 
       for(var i=0; i<numRings; i++)
@@ -796,13 +889,13 @@ make gravity helper function
         cosAngle=Math.cos(ringAngle);
         //console.log(ringDist, ringVel, ringAngle);
         //console.log("ring", saturn.xPos+Math.cos(ringAngle)*ringDist, saturn.yPos+Math.sin(ringAngle)*ringDist, saturn.xVel+Math.sin(ringAngle)*ringVel, saturn.yVel+Math.cos(ringAngle)*ringVel, 5, 1, 4800354, "#ffe9ab");
-        var ring = new Planet("ring", saturn.xPos+cosAngle*ringDist, saturn.yPos-sinAngle*ringDist, saturn.xVel+sinAngle*ringVel, saturn.yVel+cosAngle*ringVel, 5, 0.5, 4800354, "#ffe9ab");
+        var ring = new Planet("ring", saturn.xPos+cosAngle*ringDist, saturn.yPos-sinAngle*ringDist, saturn.xVel+sinAngle*ringVel, saturn.yVel+cosAngle*ringVel, 5, 0.5, 4800354, [], "#fffcd1");
         smallObjects.unshift(ring);
         saturn.moons.push(ring);
         numMoons++;
         //console.log(smallObjects);
       }
-    }//name, x(m), y(m), speedX,(m/s) speedY(m/s), radius (m), min pixels, mass (kg), color
+    }//name, x(m), y(m), speedX,(m/s) speedY(m/s), radius (m), min pixels, mass (kg), moons, color
 
     function setMassUnit(unit, mult)
     {
@@ -823,11 +916,21 @@ make gravity helper function
     function zoomIn()
     {
       zoom*=1.5;
+      if(trails == true)
+      {
+        trails = false;
+        quickToggleTrails = true;
+      }
     }
 
     function zoomOut()
     {
       zoom/=1.5;
+      if(trails == true)
+      {
+        trails = false;
+        quickToggleTrails = true;
+      }
     }
 
     function toggleShow(id)
