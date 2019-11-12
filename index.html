@@ -1,5 +1,6 @@
 <html>
 <!-- 
+change canvas size to fit screen and draw numbers
 auto orbit, stationary, custom velocity buttons
 change time, zoom controls
 make gravity helper function
@@ -11,8 +12,8 @@ make gravity helper function
       html, body {
         height: 100%;
         width: 100%;
-        margin: 0 0;
-        padding: 0 0;
+        margin: 0;
+        padding: 0;
         background-color: black;
       }
 
@@ -235,7 +236,7 @@ make gravity helper function
     </style>
   </head>
 
-  <canvas id="myCanvas" width="1280" height="698"></canvas>
+  <canvas id="myCanvas"></canvas>  <!-- width="1280" height="698" -->
 
   <p id="time"></p>
   <button id="playPause" style="position:fixed; top:70; left:20" onclick="pause()">Pause/Play</button>
@@ -305,8 +306,11 @@ make gravity helper function
 
     var canvas = document.getElementById("myCanvas");
     var ctx = canvas.getContext("2d");
-    ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    var w = window.screen.availWidth, h = window.screen.availHeight-(window.outerHeight-window.innerHeight);
+    canvas.width=w;
+    canvas.height=h;
+
+    console.log(w,h);
 
     var numMoons = 7;
 
@@ -370,7 +374,7 @@ make gravity helper function
     var delay = 17;
     var speedMult = 1000, speed = 0.017*speedMult;//300; //0.017 real time
     var current, four3PI = 4/3*Math.PI;
-    var focus = 0, zoom = 0.00000000015;
+    var focus = 6, zoom = 0.0000015;
 
     var realSatRings = false;
     if(realSatRings)
@@ -569,7 +573,9 @@ make gravity helper function
         if(drawRad < arr[i].minRad)
           drawRad = arr[i].minRad;
 
-        if(drawX-drawRad < 640 && drawX+drawRad > -640 && drawY-drawRad < 349 && drawY+drawRad > -349)
+        var hW = w/2, hH = h/2;
+
+        if(drawX-drawRad < hW && drawX+drawRad > -hW && drawY-drawRad < hH && drawY+drawRad > -hH)
         {
           if(arr[i]==saturn && realSatRings == false && zoom > 0.000000001)
           {
@@ -596,15 +602,15 @@ make gravity helper function
                 opa = 0;
               else
                 opa = 0.3;
-              drawEllipse(drawX+640, 698-(drawY+349), drawRad*j, opa, Math.PI, 2*Math.PI);
+              drawEllipse(drawX+hW, hH-drawY, drawRad*j, opa, Math.PI, 2*Math.PI);
             }
           }
           ctx.beginPath();
           ctx.globalAlpha=1;
           if(drawRad < 1)
-            ctx.rect(drawX+640-drawRad, 698-(drawY+349)-drawRad, drawRad*2, drawRad*2);
+            ctx.rect(drawX+hW-drawRad, hH-drawY-drawRad, drawRad*2, drawRad*2);
           else
-            ctx.arc(drawX+640, 698-(drawY+349), drawRad, 0, 2*Math.PI);
+            ctx.arc(drawX+hW, hH-drawY, drawRad, 0, 2*Math.PI);
           ctx.fillStyle = arr[i].col;
           ctx.fill();
           if(arr[i]==saturn && realSatRings == false && zoom > 0.000000001)
@@ -632,7 +638,7 @@ make gravity helper function
                 opa = 0;
               else
                 opa = 0.3;
-              drawEllipse(drawX+640, 698-(drawY+349), drawRad*j, opa, 0, Math.PI);
+              drawEllipse(drawX+hW, hH-drawY, drawRad*j, opa, 0, Math.PI);
             }
           }
         }
